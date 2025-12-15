@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@opentelemetry/resources": "^2.2.0",
-    "@opentelemetry/semantic-conventions": "^1.38.0"
-  }
-}
