@@ -36,6 +36,10 @@ kubectl apply -f k8s/jaeger-instance.yaml
 minikube image build -t service-a:latest services/service-a/
 minikube image build -t service-b:latest services/service-b/
 
+# Удалить под (если что-то пошло не так)
+kubectl delete pod -l app=service-a
+kubectl delete pod -l app=service-b
+
 # Развертывание
 kubectl apply -f k8s/services.yaml
 ```
