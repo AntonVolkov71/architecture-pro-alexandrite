@@ -1,0 +1,26 @@
+@startuml
+title Sequence diagram Read orders list
+
+actor Operator
+
+participant MES_UI
+participant MES_API
+
+database Redis_Cache
+database MES_DB
+
+Operator -> MES_UI: Открывает страницу дашборда
+MES_UI -> MES_API: GET /orders?filters
+MES_API -> Redis_Cache: GET cacheKey(orders, filters)
+
+alt Redis_Cache HIT - попадание(данные по ключу есть)
+  Redis_Cache --> MES_API: orders list
+  MES_API --> MES_UI: 200 OK (orders)
+else  Redis_Cache MISS - промах данных по ключу нет
+  Redis_Cache --> MES_API: null
+  MES_API -> MES_DB: SELECT orders by filters
+  MES_DB --> MES_API: orders list
+  MES_API -> Redis_Cache: SET cacheKey(...) TTL=short (safety only)
+  MES_API --> MES_UI: 200 OK (orders)
+end
+@enduml
