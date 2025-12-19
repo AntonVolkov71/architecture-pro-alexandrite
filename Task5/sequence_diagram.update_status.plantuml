@@ -1,0 +1,31 @@
+@startuml
+title  Sequence diagram Update status
+
+actor Operator
+
+participant MES_UI
+participant MES_API
+
+database Redis_Cache
+database MES_DB
+
+queue RabbitMQ
+
+Operator -> MES_UI: Меняет статус заказа
+MES_UI -> MES_API: POST /orders/{orderId}/status - {status: newStatus}
+MES_API -> MES_DB: SELECT status WHERE orderId
+MES_DB --> MES_API: currentStatus
+
+alt Проверка актуальности статуса
+    MES_API -> MES_DB: UPDATE status = newStatus WHERE orderId
+    MES_DB --> MES_API: OK
+
+    MES_API -> Redis_Cache: DEL cacheKey(orders list related)  (programmatic invalidation)
+    MES_API -> RabbitMQ: PUBLISH OrderStatusChanged(orderId, newStatus, traceId)
+    MES_API --> MES_UI: 200 OK
+
+ else конфликт статуса
+    MES_API --> MES_UI: 409 Conflict (status changed)
+end
+
+@enduml

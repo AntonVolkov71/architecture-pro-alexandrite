@@ -1,0 +1,20 @@
+@startuml
+title  Sequence diagram  Broker event -> cache invalidation
+
+participant "CRM API, Shop API [producer] " as Producer
+participant "MES API [consumer]" as MES_API
+
+queue RabbitMQ
+
+database MES_DB
+database Redis_Cache
+
+
+Producer -> RabbitMQ: Publishing OrderStatusChanged(orderId, newStatus)
+MES_API -> RabbitMQ: Consuming OrderStatusChanged
+
+MES_API -> MES_DB: UPDATE local view
+MES_DB --> MES_API: OK
+
+MES_API -> Redis_Cache: DEL cacheKey(orders list related) (programmatic invalidation)
+@enduml
